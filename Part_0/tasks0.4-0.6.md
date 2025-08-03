@@ -29,3 +29,30 @@ sequenceDiagram
     B-->>U: Rendes new page UI
     deactivate B
 ```
+
+# Task #0.5
+
+1. User types input
+2. User presses submit button
+3. Browser adds input to the local version of the data list
+4. Browser redraws the list
+5. Browser sends the new note to the server
+6. Server responds with 201 (Created)
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant B as Browser
+    participant S as Server
+    U->>B: Types note text
+    U->>B: Clicks 'submit' button
+    activate B
+    B->>B: Adds input data to the local version of the data list
+    B->>B: Redraws the UI (to displat the updated data)
+    B-->>U: Renders the UI for the user
+    B->>S: Sendes a POST request with the new note to be saved
+    activate S
+    S-->>B: Responds with status code 201 (Created)
+    deactivate S
+    deactivate B
+```
