@@ -16,14 +16,19 @@ const Part = (props) => {
 }
 
 const Content = (props) => {
-  return props.valueArray.map(el => 
-      <Part val={el} />
-    )
+  return (
+    <div>
+      <Part val={props.valueArray[0]} />
+      <Part val={props.valueArray[1]} />
+      <Part val={props.valueArray[2]} />
+    </div>
+  )
 }
 
 const Total = (props) => {
   
-  const totalCount = props.valueArray.reduce((acc, val) => acc+= val.exercises, 0)
+  const totalCount = 
+  props.valueArray[0].exercises + props.valueArray[1].exercises + props.valueArray[2].exercises
   
   return (
     <p>Number of exercises {totalCount}</p>
