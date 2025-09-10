@@ -1,26 +1,54 @@
-import { useState } from 'react'
-
+import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
-import ContactForm from './components/ContactForm'
-import ContactListDisplay from './components/ContactDisplay'
+import PersonForm from './components/PersonForm'
+import PersonListDisplay from './components/PersonDisplay'
+
+import personService from './services/persons'
 
 const App = () => {
   const [filter, setFilter] = useState('')
+  const [persons, setPersons] = useState([])
 
-  const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', number: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', number: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', number: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', number: '39-23-6423122', id: 4 }
-  ])
+  useEffect(() => {
+    personService.getAll().then(data => setPersons(data))
+  }, [])
 
-  const handlContacteSubmit = (contact) => {
-    if (persons.findIndex(p => p.name === contact.name) >= 0){
-      alert(`${contact.name} is already added to the phonebook`)
-      return
+  const handleNewPersonSubmit = (newPerson) => {
+    const personIndex = persons.findIndex(p => p.name === newPerson.name)
+    if (personIndex < 0){
+      personService.createOne(newPerson)
+        .then(data => setPersons(persons.concat(data)))
+      return true
     }
 
-    setPersons([contact, ...persons])
+    const oldPerson = persons[personIndex]
+    const userResponse = window.confirm(
+      `Update the number for existing person ${oldPerson.name} ?`)
+
+    if (!userResponse) return false
+
+    personService.updateOne(newPerson, oldPerson.id)
+      .then(data => {
+        setPersons(persons.map(p => p.id === oldPerson.id ? data : p))
+      })
+
+      return true
+  }
+
+  const handlePersonDelete = (id) => {
+    const personToDelete = persons.find(p => p.id === id)
+
+    if (!personToDelete) return
+
+    const userResponse = window.confirm(`Delete person ${personToDelete.name} ?`)
+
+    if (!userResponse) return
+
+    personService.deleteOne(id)
+      .then(r => 
+        {
+          setPersons(persons.filter(p => p.id !== id))
+        })
   }
 
   const getFilteredValues = () => {
@@ -37,9 +65,9 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter filter={filter} setFilter={setFilter} />
       <h2>add a new</h2>
-      <ContactForm onContactSubmit={handlContacteSubmit} id={persons.length+1}/>
+      <PersonForm handleNewPersonSubmit={handleNewPersonSubmit} />
       <h2>Numbers</h2>
-      <ContactListDisplay contacts={getFilteredValues()} />
+      <PersonListDisplay persons={getFilteredValues()} handleDelete={handlePersonDelete} />
     </div>
   )
 }

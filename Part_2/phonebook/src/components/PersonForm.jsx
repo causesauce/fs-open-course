@@ -1,6 +1,6 @@
 import {useState} from 'react'
 
-const ContactForm = ({onContactSubmit, id}) => {
+const PersonForm = ({handleNewPersonSubmit}) => {
     const [newName, setNewName] = useState('')
     const [newNumber, setnewNumber] = useState('')
   
@@ -15,10 +15,12 @@ const ContactForm = ({onContactSubmit, id}) => {
     const handleOnSubmit = (event) => {
         event.preventDefault()
 
-        onContactSubmit({name: newName, number: newNumber, id: id})
+        const shouldReset = handleNewPersonSubmit({name: newName, number: newNumber})
 
-        setNewName('')
-        setnewNumber('')
+        if (shouldReset){
+            setNewName('')
+            setnewNumber('')
+        }
     }
 
     return (
@@ -36,4 +38,4 @@ const ContactForm = ({onContactSubmit, id}) => {
     )
 }
 
-export default ContactForm
+export default PersonForm
