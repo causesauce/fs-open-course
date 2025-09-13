@@ -2,22 +2,34 @@ import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
 import PersonListDisplay from './components/PersonDisplay'
-
+import Notification from './components/Notification'
 import personService from './services/persons'
+
+import './index.css'
 
 const App = () => {
   const [filter, setFilter] = useState('')
-  const [persons, setPersons] = useState([])
+  const [persons, setPersons] = useState(null)
+  const [message, setMessage] = useState(null)
 
   useEffect(() => {
     personService.getAll().then(data => setPersons(data))
   }, [])
 
+  const setMessageWithTimeout = (text, isError) => {
+    setMessage({text, isError})
+    setTimeout(() => {setMessage(null)}, 3000)
+  }
+
   const handleNewPersonSubmit = (newPerson) => {
     const personIndex = persons.findIndex(p => p.name === newPerson.name)
     if (personIndex < 0){
       personService.createOne(newPerson)
-        .then(data => setPersons(persons.concat(data)))
+        .then(data => 
+          {
+            setPersons(persons.concat(data))
+            setMessageWithTimeout(`Added ${data.name}`, false)
+          })
       return true
     }
 
@@ -49,9 +61,17 @@ const App = () => {
         {
           setPersons(persons.filter(p => p.id !== id))
         })
+        .catch((reson => {
+          const notFoundPerson = persons.find(p => p.id === id)?.name
+          setMessageWithTimeout(
+            `Information of ${notFoundPerson} has already been removed from server`, 
+            true)
+          }))
   }
 
   const getFilteredValues = () => {
+    if (persons == null) return []
+
     if (filter === ''){
       return persons
     }
@@ -64,6 +84,7 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       <Filter filter={filter} setFilter={setFilter} />
+      <Notification message={message} />
       <h2>add a new</h2>
       <PersonForm handleNewPersonSubmit={handleNewPersonSubmit} />
       <h2>Numbers</h2>
