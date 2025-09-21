@@ -1,8 +1,20 @@
 const express = require('express')
+const morgan = require('morgan')
 
 const app = express()
 
 app.use(express.json())
+
+morgan.token('jsonBody', (req, res) => {
+    if (req.method === 'POST' && req.body){
+        return JSON.stringify(req.body)
+    }
+})
+
+const morganFormat = 
+        ':method :url :status :res[content-length] - :response-time ms :jsonBody'
+
+app.use(morgan(morganFormat))
 
 let personsData = [
     { 
@@ -97,6 +109,7 @@ app.post('/api/persons', (req, resp) => {
 
     resp.send(newPerson)
 })
+
 
 const PORT = 3001
 app.listen(PORT, () =>{
