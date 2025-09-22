@@ -39,7 +39,7 @@ let personsData = [
     }
 ]
 
-const getNewId = () => {
+const getNewUniqueId = () => {
     let newId = Math.floor(Math.random() * 100_000)
 
     while(personsData.findIndex(p => p.id === newId) >= 0){
@@ -100,7 +100,7 @@ app.post('/api/persons', (req, resp) => {
     }
 
     const newPerson = {
-        id: String(getNewId()),
+        id: String(getNewUniqueId()),
         name: body.name,
         number: body.number
     }
