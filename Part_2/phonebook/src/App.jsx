@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react'
 import Filter from './components/Filter'
-import PersonForm from './components/PersonForm'
-import PersonListDisplay from './components/PersonDisplay'
+import ContactForm from './components/ContactForm'
+import ContactListDisplay from './components/ContactDisplay'
 import Notification from './components/Notification'
-import personService from './services/persons'
+import contactService from './services/contacts'
 
 import './index.css'
 
 const App = () => {
   const [filter, setFilter] = useState('')
-  const [persons, setPersons] = useState(null)
+  const [contacts, setContacts] = useState(null)
   const [message, setMessage] = useState(null)
 
   useEffect(() => {
-    personService.getAll().then(data => setPersons(data))
+    contactService.getAll().then(data => setContacts(data))
   }, [])
 
   const setMessageWithTimeout = (text, isError) => {
@@ -21,63 +21,63 @@ const App = () => {
     setTimeout(() => {setMessage(null)}, 3000)
   }
 
-  const handleNewPersonSubmit = (newPerson) => {
-    const personIndex = persons.findIndex(p => p.name === newPerson.name)
-    if (personIndex < 0){
-      personService.createOne(newPerson)
+  const handleNewContactSubmit = (newContact) => {
+    const contactIndex = contacts.findIndex(p => p.name === newContact.name)
+    if (contactIndex < 0){
+      contactService.createOne(newContact)
         .then(data => 
           {
-            setPersons(persons.concat(data))
+            setContacts(contacts.concat(data))
             setMessageWithTimeout(`Added ${data.name}`, false)
           })
       return true
     }
 
-    const oldPerson = persons[personIndex]
+    const oldContact = contacts[contactIndex]
     const userResponse = window.confirm(
-      `Update the number for existing person ${oldPerson.name} ?`)
+      `Update the number for existing contact ${oldContact.name} ?`)
 
     if (!userResponse) return false
 
-    personService.updateOne(newPerson, oldPerson.id)
+    contactService.updateOne(newContact, oldContact.id)
       .then(data => {
-        setPersons(persons.map(p => p.id === oldPerson.id ? data : p))
+        setContacts(contacts.map(p => p.id === oldContact.id ? data : p))
       })
 
       return true
   }
 
-  const handlePersonDelete = (id) => {
-    const personToDelete = persons.find(p => p.id === id)
+  const handleContactDelete = (id) => {
+    const contactToDelete = contacts.find(p => p.id === id)
 
-    if (!personToDelete) return
+    if (!contactToDelete) return
 
-    const userResponse = window.confirm(`Delete person ${personToDelete.name} ?`)
+    const userResponse = window.confirm(`Delete contact ${contactToDelete.name} ?`)
 
     if (!userResponse) return
 
-    personService.deleteOne(id)
+    contactService.deleteOne(id)
       .then(r => 
         {
-          setPersons(persons.filter(p => p.id !== id))
+          setContacts(contacts.filter(p => p.id !== id))
         })
         .catch((reson => {
-          const notFoundPerson = persons.find(p => p.id === id)?.name
+          const notFoundContact = contacts.find(p => p.id === id)?.name
           setMessageWithTimeout(
-            `Information of ${notFoundPerson} has already been removed from server`, 
+            `Information of ${notFoundContact} has already been removed from server`, 
             true)
           }))
   }
 
   const getFilteredValues = () => {
-    if (persons == null) return []
+    if (contacts == null) return []
 
     if (filter === ''){
-      return persons
+      return contacts
     }
 
     const filterLower = filter.toLowerCase()
-    return persons.filter(p => p.name.toLowerCase().includes(filterLower))
+    return contacts.filter(p => p.name?.toLowerCase()?.includes(filterLower))
   }
 
   return (
@@ -86,9 +86,9 @@ const App = () => {
       <Filter filter={filter} setFilter={setFilter} />
       <Notification message={message} />
       <h2>add a new</h2>
-      <PersonForm handleNewPersonSubmit={handleNewPersonSubmit} />
+      <ContactForm handleNewContactSubmit={handleNewContactSubmit} />
       <h2>Numbers</h2>
-      <PersonListDisplay persons={getFilteredValues()} handleDelete={handlePersonDelete} />
+      <ContactListDisplay contacts={getFilteredValues()} handleDelete={handleContactDelete} />
     </div>
   )
 }

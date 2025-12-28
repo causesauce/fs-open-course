@@ -1,5 +1,5 @@
 import axios from 'axios'
-const baseUrl = '/api/persons'
+const baseUrl = '/api/contacts'
 
 const getDataFromResponse = (promise) => 
     promise.then(response => response.data)
@@ -7,11 +7,11 @@ const getDataFromResponse = (promise) =>
 const getAll = () => 
     getDataFromResponse(axios.get(baseUrl))
 
-const createOne = (person) => 
-    getDataFromResponse(axios.post(baseUrl, person))
+const createOne = (contact) => 
+    getDataFromResponse(axios.post(baseUrl, contact))
 
-const updateOne = (person, id) => 
-    getDataFromResponse(axios.put(`${baseUrl}/${id}`, person))
+const updateOne = (contact, id) => 
+    getDataFromResponse(axios.put(`${baseUrl}/${id}`, contacts))
 
 
 const deleteOne = (id) =>

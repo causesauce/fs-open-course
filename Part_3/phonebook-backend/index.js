@@ -1,5 +1,7 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
+const Contact = require('./models/contact')
 
 const app = express()
 
@@ -17,75 +19,54 @@ const morganFormat =
 
 app.use(morgan(morganFormat))
 
-let personsData = [
-    { 
-      "id": "1",
-      "name": "Arto Hellas", 
-      "number": "040-123456"
-    },
-    { 
-      "id": "2",
-      "name": "Ada Lovelace", 
-      "number": "39-44-5323523"
-    },
-    { 
-      "id": "3",
-      "name": "Dan Abramov", 
-      "number": "12-43-234345"
-    },
-    { 
-      "id": "4",
-      "name": "Mary Poppendieck", 
-      "number": "39-23-6423122"
-    }
-]
-
-const getNewUniqueId = () => {
-    let newId = Math.floor(Math.random() * 100_000)
-
-    while(personsData.findIndex(p => p.id === newId) >= 0){
-        newId = Math.floor(Math.random() * 100_000)
-    }
-
-    return newId
-}
-
-app.get('/api/persons', (req, resp) => {
-    resp.send(personsData)
+app.get('/api/contacts', (req, resp) => {
+    Contact.find({}).then(data => resp.json(data))
 })
 
 app.get('/api/info', (req, resp) => {
     const requestDateTime = Date()
-    const info = 
-    `<p>Phonebook has info for ${personsData.length} people</p>
-    <p>${requestDateTime}</p>`
-
-    resp.send(info)
+    Contact.countDocuments({}).then(
+        res => {
+            const info = 
+            `<p>Phonebook has info for ${res} people</p>
+            <p>${requestDateTime}</p>`
+            resp.send(info)
+        }
+    )
 })
 
-app.get('/api/persons/:id', (req, resp) => {
+app.get('/api/contacts/:id', (req, resp, next) => {
     const id = req.params.id
 
-    const person = personsData.find(p => p.id === id)
-
-    if (!person){
-        resp.status(404)
-        resp.statusMessage = 'No Person found' 
-        return resp.end()
-    }
-
-    resp.send(person)
+    Contact.findOne({_id: id})
+        .then(c => {
+            if (!c){
+                resp.status(404)
+                resp.statusMessage = 'No Contact found'
+                return resp.end()
+            }
+            resp.json(c)
+        })
+        .catch(err => next(err))
 })
 
-app.delete('/api/persons/:id', (req, resp) => {
+app.delete('/api/contacts/:id', (req, resp) => {
     const id = req.params.id
+    
+    Contact.deleteOne({_id: id})
+        .then(result => {
+            if (result && result.acknowledged && result.deletedCount > 0){
+                resp.status(204)
+            }
+            else{
+                resp.status(404)
+            }
 
-    personsData = personsData.filter(p => p.id !== id)
-
-    resp.status(204).end()
+            resp.end()
+        })
 })
 
-app.post('/api/persons', (req, resp) => {
+app.post('/api/contacts', (req, resp) => {
     const body = req.body
 
     if (!body.name){
@@ -96,21 +77,50 @@ app.post('/api/persons', (req, resp) => {
         return resp.status(400).send({error: "number cannot be empty"})
     }
 
-    if (personsData.findIndex(p => p.name === body.name) >= 0){
-        return resp.status(400).send({error: "entry with the same name already exists"})
-    }
-
-    const newPerson = {
-        id: String(getNewUniqueId()),
+    const newContact = new Contact({
         name: body.name,
         number: body.number
-    }
+    })
 
-    personsData.push(newPerson)
-
-    resp.send(newPerson)
+    newContact.save().then(savedContact => resp.json(savedContact))
 })
 
+app.put('/api/contacts/:id', (req, resp, next) => {
+    const {name, number} = req.body
+
+    Contact.findById(req.params.id)
+        .then(contact => {
+            if (!contact){
+                return resp.status(404).end()
+            }
+
+            contact.name = name
+            contact.number = number
+
+            return contact.save().then((updatedContact) => {
+                resp.json(updatedContact)
+            })
+        })
+        .catch(err => next(err))
+})
+
+const unknownEndpoint = (req, resp) => {
+    resp.status(404).send({error: 'unknown endpoint'})
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, req, resp, next) => {
+    console.log(error.message)
+
+    if (error.name === 'CastError'){
+        resp.status(400).send({error: 'invalid id format'})
+    }
+
+    next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () =>{
