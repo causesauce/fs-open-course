@@ -66,7 +66,7 @@ app.delete('/api/contacts/:id', (req, resp) => {
         })
 })
 
-app.post('/api/contacts', (req, resp) => {
+app.post('/api/contacts', (req, resp, next) => {
     const body = req.body
 
     if (!body.name){
@@ -82,7 +82,9 @@ app.post('/api/contacts', (req, resp) => {
         number: body.number
     })
 
-    newContact.save().then(savedContact => resp.json(savedContact))
+    newContact.save()
+        .then(savedContact => resp.json(savedContact))
+        .catch(err => next(err))
 })
 
 app.put('/api/contacts/:id', (req, resp, next) => {
@@ -114,7 +116,11 @@ const errorHandler = (error, req, resp, next) => {
     console.log(error.message)
 
     if (error.name === 'CastError'){
-        resp.status(400).send({error: 'invalid id format'})
+        resp.status(400).send({ error: 'invalid id format' })
+    }
+
+    if (error.name === 'ValidationError'){
+        resp.status(400).send({ error: error.message })
     }
 
     next(error)
