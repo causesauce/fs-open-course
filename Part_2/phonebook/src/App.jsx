@@ -18,7 +18,8 @@ const App = () => {
 
   const setMessageWithTimeout = (text, isError) => {
     setMessage({text, isError})
-    setTimeout(() => {setMessage(null)}, 3000)
+    const time = isError ? 10_000 : 3000
+    setTimeout(() => {setMessage(null)}, time)
   }
 
   const handleNewContactSubmit = (newContact) => {
@@ -29,6 +30,11 @@ const App = () => {
           {
             setContacts(contacts.concat(data))
             setMessageWithTimeout(`Added ${data.name}`, false)
+          })
+          .catch(err => {
+            const errorMessage = err.response.data.error
+            console.log(errorMessage)
+            setMessageWithTimeout(errorMessage, true)
           })
       return true
     }
@@ -42,6 +48,12 @@ const App = () => {
     contactService.updateOne(newContact, oldContact.id)
       .then(data => {
         setContacts(contacts.map(p => p.id === oldContact.id ? data : p))
+        setMessageWithTimeout(`Updated ${data.name}`, false)
+      })
+      .catch(err => {
+        const errorMessage = err.response.data.error
+        console.log(errorMessage)
+        setMessageWithTimeout(errorMessage, true)
       })
 
       return true
@@ -57,11 +69,11 @@ const App = () => {
     if (!userResponse) return
 
     contactService.deleteOne(id)
-      .then(r => 
+      .then(() => 
         {
           setContacts(contacts.filter(p => p.id !== id))
         })
-        .catch((reson => {
+        .catch((() => {
           const notFoundContact = contacts.find(p => p.id === id)?.name
           setMessageWithTimeout(
             `Information of ${notFoundContact} has already been removed from server`, 

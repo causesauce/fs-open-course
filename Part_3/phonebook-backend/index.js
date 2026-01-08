@@ -8,7 +8,7 @@ const app = express()
 app.use(express.static('dist'))
 app.use(express.json())
 
-morgan.token('jsonBody', (req, res) => {
+morgan.token('jsonBody', (req) => {
     if (req.method === 'POST' && req.body){
         return JSON.stringify(req.body)
     }

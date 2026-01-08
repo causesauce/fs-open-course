@@ -5,7 +5,7 @@ const url = process.env.MONGO_URI
 mongoose.set('strictQuery', false)
 
 mongoose.connect(url, {family: 4})
-    .then(res => console.log('connected to mongo'))
+    .then(() => console.log('connected to mongo'))
     .catch(err => console.log('error connecting to mongo:', err.message))
 
 const personSchema = new mongoose.Schema({
